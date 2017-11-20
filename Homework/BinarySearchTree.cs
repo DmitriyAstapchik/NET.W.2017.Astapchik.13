@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Homework
 {
@@ -44,7 +45,7 @@ namespace Homework
         /// <param name="comparer"></param>
         public BinarySearchTree(IComparer<T> comparer = null)
         {
-            this.comparer = comparer ?? Comparer<T>.Default;
+            this.comparer = comparer ?? ((typeof(T).GetInterface(nameof(IComparable)) != null || typeof(T).GetInterface(nameof(IComparable<T>)) != null) ? Comparer<T>.Default : throw new ApplicationException($"type {nameof(T)} does not contain a default comparer"));
         }
 
         /// <summary>
