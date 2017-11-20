@@ -14,7 +14,12 @@ namespace Matrices
         /// <summary>
         /// matrix order
         /// </summary>
-        public readonly uint Order;
+        private uint order;
+
+        /// <summary>
+        /// two-dimensional array of matrix elements
+        /// </summary>
+        private T[,] matrix;
 
         /// <summary>
         /// creates a square matrix of default values with specified order
@@ -22,8 +27,24 @@ namespace Matrices
         /// <param name="order">matrix order</param>
         public SquareMatrix(uint order)
         {
-            this.Order = order;
-            Matrix = new T[order, order];
+            this.order = order;
+            matrix = new T[order, order];
+        }
+
+        /// <summary>
+        /// creates a square matrix of one value
+        /// </summary>
+        /// <param name="order">matrix order</param>
+        /// <param name="value">value to fill the matrix</param>
+        public SquareMatrix(uint order, T value) : this(order)
+        {
+            for (uint i = 0; i < order; i++)
+            {
+                for (uint j = 0; j < order; j++)
+                {
+                    this[i, j] = value;
+                }
+            }
         }
 
         /// <summary>
@@ -38,7 +59,7 @@ namespace Matrices
                 throw new ArgumentException("array dimensions are not equal");
             }
 
-            Matrix = array;
+            matrix = array;
         }
 
         /// <summary>
@@ -48,16 +69,16 @@ namespace Matrices
         public SquareMatrix(params T[] elements)
             : this((uint)Math.Sqrt(elements.Length))
         {
-            if (elements.Length != Order * Order)
+            if (elements.Length != order * order)
             {
                 throw new ArgumentException("number of elements is not equal to number of matrix elements");
             }
 
-            for (int i = 0; i < Order; i++)
+            for (int i = 0; i < order; i++)
             {
-                for (int j = 0; j < Order; j++)
+                for (int j = 0; j < order; j++)
                 {
-                    Matrix[i, j] = elements[(i * Order) + j];
+                    matrix[i, j] = elements[(i * order) + j];
                 }
             }
         }
@@ -68,9 +89,9 @@ namespace Matrices
         public event EventHandler<ElementChangedEventArgs> ElementChanged;
 
         /// <summary>
-        /// two-dimensional array of matrix elements
+        /// gets matrix order
         /// </summary>
-        protected T[,] Matrix { get; set; }
+        public uint Order { get => order; protected set => order = value; }
 
         /// <summary>
         /// matrix element indexer
@@ -82,36 +103,73 @@ namespace Matrices
         {
             get
             {
-                if (row >= Order)
+                if (row >= order)
                 {
                     throw new ArgumentOutOfRangeException("row", "row number is too big");
                 }
 
-                if (column >= Order)
+                if (column >= order)
                 {
                     throw new ArgumentOutOfRangeException("column", "column number is too big");
                 }
 
-                return Matrix[row, column];
+                return matrix[row, column];
             }
 
             set
             {
-                var old = Matrix[row, column];
-                Matrix[row, column] = value;
-                ElementChanged(this, new ElementChangedEventArgs(old, value, new ElementChangedEventArgs.ElementLocation(row, column)));
+                var old = matrix[row, column];
+                matrix[row, column] = value;
+                ElementChanged?.Invoke(this, new ElementChangedEventArgs(row, column, old, value));
             }
         }
 
-        public static IEnumerable<T> GetMatrixElements(SquareMatrix<T> matrix)
+        /// <summary>
+        /// gets an enumeration of matrix elements
+        /// </summary>
+        /// <returns>matrix elements</returns>
+        public IEnumerable<T> GetElements()
         {
-            for (uint i = 0; i < matrix.Order; i++)
+            for (uint i = 0; i < Order; i++)
             {
-                for (uint j = 0; j < matrix.Order; j++)
+                for (uint j = 0; j < Order; j++)
                 {
-                    yield return matrix[i, j];
+                    yield return this[i, j];
                 }
             }
+        }
+
+        /// <summary>
+        /// two square matrices addition
+        /// </summary>
+        /// <param name="matrix">matrix to add</param>
+        /// <returns>sum of matrices</returns>
+        public SquareMatrix<T> Add(SquareMatrix<T> matrix)
+        {
+            if (order != matrix.order)
+            {
+                throw new InvalidOperationException("cannot add matrices with not equal orders");
+            }
+
+            var newMatrix = new SquareMatrix<T>(order);
+            for (uint i = 0; i < newMatrix.order; i++)
+            {
+                for (uint j = 0; j < newMatrix.order; j++)
+                {
+                    newMatrix[i, j] = this[i, j] + (dynamic)matrix[i, j];
+                }
+            }
+
+            return newMatrix;
+        }
+
+        /// <summary>
+        /// event handler invocation
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnElementChanged(ElementChangedEventArgs e)
+        {
+            ElementChanged?.Invoke(this, e);
         }
 
         /// <summary>
@@ -129,49 +187,15 @@ namespace Matrices
             /// </summary>
             public readonly T NewValue;
 
-            /// <summary>
-            /// changed element indices
-            /// </summary>
-            public readonly ElementLocation Changed;
+            public readonly uint Row;
+            public readonly uint Column;
 
-            /// <summary>
-            /// constructs event arguments instance with specified info
-            /// </summary>
-            /// <param name="old">old element value</param>
-            /// <param name="new">new element value</param>
-            /// <param name="changed">changed element indices</param>
-            internal ElementChangedEventArgs(T old, T @new, ElementLocation changed)
+            internal ElementChangedEventArgs(uint row, uint column, T old, T @new)
             {
+                this.Row = row;
+                this.Column = column;
                 this.OldValue = old;
                 this.NewValue = @new;
-                this.Changed = changed;
-            }
-
-            /// <summary>
-            /// contains matrix element indices
-            /// </summary>
-            public struct ElementLocation
-            {
-                /// <summary>
-                /// element row
-                /// </summary>
-                public readonly uint Row;
-
-                /// <summary>
-                /// element column
-                /// </summary>
-                public readonly uint Column;
-
-                /// <summary>
-                /// constructs an instance with specified row and column
-                /// </summary>
-                /// <param name="row">element row</param>
-                /// <param name="column">element column</param>
-                internal ElementLocation(uint row, uint column)
-                {
-                    this.Row = row;
-                    this.Column = column;
-                }
             }
         }
     }

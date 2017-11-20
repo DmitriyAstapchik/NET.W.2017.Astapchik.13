@@ -9,15 +9,21 @@ namespace Matrices
     /// represents a diagonal matrix
     /// </summary>
     /// <typeparam name="T">type of matrix elements</typeparam>
-    public class DiagonalMatrix<T> : SquareMatrix<T>
+    public class DiagonalMatrix<T> : SymmetricMatrix<T>
     {
+        /// <summary>
+        /// main diagonal values
+        /// </summary>
+        private T[] mainDiagonal;
+
         /// <summary>
         /// creates a diagonal matrix of default values
         /// </summary>
         /// <param name="order">matrix order</param>
         public DiagonalMatrix(uint order)
-            : base(order)
         {
+            this.Order = order;
+            this.mainDiagonal = new T[order];
         }
 
         /// <summary>
@@ -25,12 +31,11 @@ namespace Matrices
         /// </summary>
         /// <param name="order">matrix order</param>
         /// <param name="diagonalValue">main diagonal value</param>
-        public DiagonalMatrix(uint order, T diagonalValue)
-            : this(order)
+        public DiagonalMatrix(uint order, T diagonalValue) : this(order)
         {
-            for (int i = 0; i < order; i++)
+            for (int i = 0; i < this.mainDiagonal.Length; i++)
             {
-                this.Matrix[i, i] = diagonalValue;
+                this.mainDiagonal[i] = diagonalValue;
             }
         }
 
@@ -41,9 +46,9 @@ namespace Matrices
         public DiagonalMatrix(params T[] diagonalValues)
             : this((uint)diagonalValues.Length)
         {
-            for (int i = 0; i < this.Order; i++)
+            for (int i = 0; i < diagonalValues.Length; i++)
             {
-                this.Matrix[i, i] = diagonalValues[i];
+                this.mainDiagonal[i] = diagonalValues[i];
             }
         }
 
@@ -57,18 +62,42 @@ namespace Matrices
         {
             get
             {
-                return base[row, column];
+                return row != column ? default(T) : this.mainDiagonal[row];
             }
 
             set
             {
-                if (row != column)
+                if (row == column)
                 {
-                    throw new ArgumentException("cannot change non-diagonal elements");
+                    var old = this.mainDiagonal[row];
+                    this.mainDiagonal[row] = value;
+                    this.OnElementChanged(new ElementChangedEventArgs(row, column, old, value));
                 }
-
-                base[row, column] = value;
             }
+        }
+
+        /// <summary>
+        /// two diagonal matrices addition
+        /// </summary>
+        /// <param name="matrix">matrix to add</param>
+        /// <returns>sum of matrices</returns>
+        public DiagonalMatrix<T> Add(DiagonalMatrix<T> matrix)
+        {
+            if (this.Order != matrix.Order)
+            {
+                throw new InvalidOperationException("cannot add matrices with not equal orders");
+            }
+
+            var newMatrix = new DiagonalMatrix<T>(Order);
+            for (uint i = 0; i < newMatrix.Order; i++)
+            {
+                for (uint j = 0; j < newMatrix.Order; j++)
+                {
+                    newMatrix[i, j] = this[i, j] + (dynamic)matrix[i, j];
+                }
+            }
+
+            return newMatrix;
         }
     }
 }
