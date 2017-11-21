@@ -41,7 +41,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinarySearchTree.cs" />
+    <Compile Include="Matrices\AbstractMatrix.cs" />
     <Compile Include="Matrices\DiagonalMatrix.cs" />
+    <Compile Include="Matrices\MatricesExtension.cs" />
     <Compile Include="Matrices\SquareMatrix.cs" />
     <Compile Include="Matrices\SymmetricMatrix.cs" />
     <Compile Include="Queue.cs" />

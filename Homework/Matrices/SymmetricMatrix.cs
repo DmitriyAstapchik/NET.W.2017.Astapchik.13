@@ -9,17 +9,19 @@ namespace Matrices
     /// class represents a symmetric matrix
     /// </summary>
     /// <typeparam name="T">type of matrix elements</typeparam>
-    public class SymmetricMatrix<T> : SquareMatrix<T>
+    public class SymmetricMatrix<T> : AbstractMatrix<T>
     {
+        /// <summary>
+        /// triangle matrix as a base
+        /// </summary>
         private T[][] matrixBase;
 
         /// <summary>
         /// creates symmetric matrix instance of default values
         /// </summary>
         /// <param name="order"></param>
-        public SymmetricMatrix(uint order)
+        public SymmetricMatrix(uint order) : base(order)
         {
-            this.Order = order;
             this.matrixBase = new T[order][];
             for (int i = 0; i < order; i++)
             {
@@ -28,46 +30,46 @@ namespace Matrices
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="order"></param>
+        /// <param name="value"></param>
+        public SymmetricMatrix(uint order, T value) : this(order)
+        {
+            for (uint i = 0; i < order; i++)
+            {
+                for (uint j = 0; j < order; j++)
+                {
+                    this[i, j] = value;
+                }
+            }
+        }
+
+        /// <summary>
         /// creates a symmetric matrix from a two-dimensional array of elements
         /// </summary>
         /// <param name="array">elements array</param>
-        public SymmetricMatrix(T[,] array)
+        public SymmetricMatrix(T[,] array) : base(array)
         {
-            this.Order = (uint)array.GetLength(0);
-            this.matrixBase = new T[array.GetLength(0)][];
-            for (int i = 0; i < array.GetLength(0); i++)
-            {
-                this.matrixBase[i] = new T[array.GetLength(1) - i];
-                for (int j = i; j < array.GetLength(1); j++)
-                {
-                    this.matrixBase[i][j - i] = array[i, j];
-                }
-            }
-
-            if (!IsSymmetric(this))
-            {
-                throw new ArgumentException("given array cannot form a symmetric matrix", "array");
-            }
+            this.matrixBase = ToMatrixBase(array);
         }
 
         /// <summary>
         /// creates a symmetric matrix instance from specified elements
         /// </summary>
         /// <param name="elements">matrix elements left-to-right top-to-bottom</param>
-        public SymmetricMatrix(params T[] elements) : this((uint)Math.Sqrt(elements.Length))
+        public SymmetricMatrix(params T[] elements) : base(elements)
         {
+            var array = new T[Order, Order];
             for (uint i = 0; i < this.Order; i++)
             {
                 for (uint j = 0; j < this.Order; j++)
                 {
-                    this[i, j] = elements[(i * this.Order) + j];
+                    array[i, j] = elements[(i * this.Order) + j];
                 }
             }
 
-            if (!IsSymmetric(this))
-            {
-                throw new ArgumentException("given elemets cannot form a symmetric matrix", "elements");
-            }
+            this.matrixBase = ToMatrixBase(array);
         }
 
         /// <summary>
@@ -78,11 +80,7 @@ namespace Matrices
         /// <returns>element value</returns>
         public override T this[uint row, uint column]
         {
-            get
-            {
-                return this.matrixBase[row > column ? column : row][row > column ? row - column : column - row];
-            }
-
+            get => this.matrixBase[row > column ? column : row][row > column ? row - column : column - row];
             set
             {
                 var old = this[row, column];
@@ -93,17 +91,47 @@ namespace Matrices
         }
 
         /// <summary>
-        /// checks if a specified square matrix is symmetric
+        /// gets symmetric matrix base from a square array of matrix elements
         /// </summary>
-        /// <param name="matrix">square matrix to check</param>
-        /// <returns>true if symmetric; otherwise false</returns>
-        public static bool IsSymmetric(SquareMatrix<T> matrix)
+        /// <param name="array">array of matrix elements</param>
+        /// <returns>symmetric matrix base</returns>
+        private static T[][] ToMatrixBase(T[,] array)
         {
-            for (uint i = 0; i < matrix.Order; i++)
+            if (!IsSymmetric(array))
             {
-                for (uint j = 0; j < matrix.Order; j++)
+                throw new ArgumentException("this array cannot form a symmetric matrix", "array");
+            }
+
+            var matrixBase = new T[array.GetLength(0)][];
+            for (int i = 0; i < array.GetLength(0); i++)
+            {
+                matrixBase[i] = new T[array.GetLength(0) - i];
+                for (int j = i; j < array.GetLength(0); j++)
                 {
-                    if (!matrix[i, j].Equals(matrix[j, i]))
+                    matrixBase[i][j - i] = array[i, j];
+                }
+            }
+
+            return matrixBase;
+        }
+
+        /// <summary>
+        /// checks if a specified array can form a symmetric matrix
+        /// </summary>
+        /// <param name="array">array to check</param>
+        /// <returns>true if symmetric; otherwise false</returns>
+        private static bool IsSymmetric(T[,] array)
+        {
+            if (array.GetLength(0) != array.GetLength(1))
+            {
+                return false;
+            }
+
+            for (uint i = 0; i < array.GetLength(0); i++)
+            {
+                for (uint j = 0; j < array.GetLength(1); j++)
+                {
+                    if (!array[i, j].Equals(array[j, i]))
                     {
                         return false;
                     }
@@ -111,30 +139,6 @@ namespace Matrices
             }
 
             return true;
-        }
-
-        /// <summary>
-        ///  two symmetric matrices addition
-        /// </summary>
-        /// <param name="matrix">matrix to add</param>
-        /// <returns>sum of matrices</returns>
-        public SymmetricMatrix<T> Add(SymmetricMatrix<T> matrix)
-        {
-            if (this.Order != matrix.Order)
-            {
-                throw new InvalidOperationException("cannot add matrices with not equal orders");
-            }
-
-            var newMatrix = new SymmetricMatrix<T>(Order);
-            for (uint i = 0; i < newMatrix.Order; i++)
-            {
-                for (uint j = 0; j < newMatrix.Order; j++)
-                {
-                    newMatrix[i, j] = this[i, j] + (dynamic)matrix[i, j];
-                }
-            }
-
-            return newMatrix;
         }
     }
 }

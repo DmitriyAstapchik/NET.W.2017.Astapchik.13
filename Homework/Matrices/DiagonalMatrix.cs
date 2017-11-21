@@ -9,7 +9,7 @@ namespace Matrices
     /// represents a diagonal matrix
     /// </summary>
     /// <typeparam name="T">type of matrix elements</typeparam>
-    public class DiagonalMatrix<T> : SymmetricMatrix<T>
+    public class DiagonalMatrix<T> : AbstractMatrix<T>
     {
         /// <summary>
         /// main diagonal values
@@ -20,9 +20,8 @@ namespace Matrices
         /// creates a diagonal matrix of default values
         /// </summary>
         /// <param name="order">matrix order</param>
-        public DiagonalMatrix(uint order)
+        public DiagonalMatrix(uint order) : base(order)
         {
-            this.Order = order;
             this.mainDiagonal = new T[order];
         }
 
@@ -43,8 +42,7 @@ namespace Matrices
         /// creates a diagonal matrix with specified main diagonal values
         /// </summary>
         /// <param name="diagonalValues">main diagonal values</param>
-        public DiagonalMatrix(params T[] diagonalValues)
-            : this((uint)diagonalValues.Length)
+        public DiagonalMatrix(params T[] diagonalValues) : this((uint)diagonalValues.Length)
         {
             for (int i = 0; i < diagonalValues.Length; i++)
             {
@@ -60,44 +58,18 @@ namespace Matrices
         /// <returns>element value</returns>
         public override T this[uint row, uint column]
         {
-            get
-            {
-                return row != column ? default(T) : this.mainDiagonal[row];
-            }
-
+            get => row != column ? default(T) : this.mainDiagonal[row];
             set
             {
-                if (row == column)
+                if (row != column)
                 {
-                    var old = this.mainDiagonal[row];
-                    this.mainDiagonal[row] = value;
-                    this.OnElementChanged(new ElementChangedEventArgs(row, column, old, value));
+                    throw new NotSupportedException("cannot change non-diagonal values");
                 }
-            }
-        }
 
-        /// <summary>
-        /// two diagonal matrices addition
-        /// </summary>
-        /// <param name="matrix">matrix to add</param>
-        /// <returns>sum of matrices</returns>
-        public DiagonalMatrix<T> Add(DiagonalMatrix<T> matrix)
-        {
-            if (this.Order != matrix.Order)
-            {
-                throw new InvalidOperationException("cannot add matrices with not equal orders");
+                var old = this.mainDiagonal[row];
+                this.mainDiagonal[row] = value;
+                this.OnElementChanged(new ElementChangedEventArgs(row, column, old, value));
             }
-
-            var newMatrix = new DiagonalMatrix<T>(Order);
-            for (uint i = 0; i < newMatrix.Order; i++)
-            {
-                for (uint j = 0; j < newMatrix.Order; j++)
-                {
-                    newMatrix[i, j] = this[i, j] + (dynamic)matrix[i, j];
-                }
-            }
-
-            return newMatrix;
         }
     }
 }
