@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Matrices;
 using NUnit.Framework;
 
@@ -7,30 +8,58 @@ namespace Homework.Tests.MatricesTests
     [TestFixture]
     public class SymmetricMatrixTests
     {
-        [Test]
-        public void SymmetricMatrixTest()
-        {
-            SymmetricMatrix<string> matrix;
+        private SymmetricMatrix<string> matrix;
 
+        [Test]
+        public void ConstructorsTest()
+        {
             matrix = new SymmetricMatrix<string>(4);
             CollectionAssert.AreEqual(Enumerable.Repeat<string>(null, 16), matrix.GetElements());
 
+            matrix = new SymmetricMatrix<string>(3, "value");
+            CollectionAssert.AreEqual(Enumerable.Repeat("value", 9), matrix.GetElements());
+
             var elements = new string[4, 4] { { "a", "b", "c", "d" }, { "b", "f", "e", "g" }, { "c", "e", "h", "i" }, { "d", "g", "i", "j" } };
             matrix = new SymmetricMatrix<string>(elements);
-            Assert.True(SymmetricMatrix<string>.IsSymmetric(matrix));
             CollectionAssert.AreEqual("abcdbfegcehidgij".ToCharArray().Select(c => c.ToString()), matrix.GetElements());
+
+            var elements2 = new string[] { "sym1", "sym2", "sym2", "sym1" };
+            matrix = new SymmetricMatrix<string>(elements2);
+            CollectionAssert.AreEqual(elements2, matrix.GetElements());
+        }
+
+        [Test]
+        public void IndexerTest()
+        {
+            matrix = new SymmetricMatrix<string>("a", "b", "c", "d", "b", "f", "e", "g", "c", "e", "h", "i", "d", "g", "i", "j");
+
             Assert.AreEqual("j", matrix[3, 3]);
             Assert.AreEqual("f", matrix[1, 1]);
             Assert.AreEqual("c", matrix[2, 0]);
             Assert.AreEqual("e", matrix[1, 2]);
+        }
 
-            var elements2 = new string[] { "sym1", "sym2", "sym2", "sym1" };
-            matrix = new SymmetricMatrix<string>(elements2);
-            Assert.True(SymmetricMatrix<string>.IsSymmetric(matrix));
-            CollectionAssert.AreEqual(elements2, matrix.GetElements());
+        [Test]
+        public void EventTest()
+        {
+            matrix = new SymmetricMatrix<string>("sym1", "sym2", "sym2", "sym1");
 
             matrix.ElementChanged += Matrix_ElementChanged;
             matrix[0, 1] = "sym3";
+        }
+
+        [Test]
+        public void ExceptionsTest()
+        {
+            Assert.Throws<ArgumentException>(() => matrix = new SymmetricMatrix<string>(new string[3, 2] { { "s", "s" }, { "s", "s" }, { "s", "s" } }));
+            Assert.Throws<ArgumentException>(() => matrix = new SymmetricMatrix<string>("str1", "str2", "str3"));
+            Assert.Throws<ArgumentException>(() => matrix = new SymmetricMatrix<string>("str1", "str2", "str1", "str2"));
+        }
+
+        [Test]
+        public void AdditionTest()
+        {
+            matrix = new SymmetricMatrix<string>("sym1", "sym3", "sym3", "sym1");
 
             var square = new SquareMatrix<string>(new string[2, 2] { { "sq1", "sq2" }, { "sq3", "sq4" } });
             var sq1 = matrix.Add(square);

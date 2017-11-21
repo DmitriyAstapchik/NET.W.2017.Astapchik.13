@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Matrices;
 using NUnit.Framework;
 
@@ -7,26 +8,48 @@ namespace Homework.Tests.MatricesTests
     [TestFixture]
     public class SquareMatrixTests
     {
+        private SquareMatrix<int> testMatrix;
+
         [Test]
-        public void SquareMatrixTest()
+        public void ConstructorsTest()
         {
-            SquareMatrix<int> matrix;
+            testMatrix = new SquareMatrix<int>(3u);
+            CollectionAssert.AreEqual(Enumerable.Repeat(default(int), 9), testMatrix.GetElements());
 
-            matrix = new SquareMatrix<int>(3u);
-            CollectionAssert.AreEqual(new int[9] { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, matrix.GetElements());
+            testMatrix = new SquareMatrix<int>(3u, 9);
+            CollectionAssert.AreEqual(Enumerable.Repeat(9, 9), testMatrix.GetElements());
 
-            matrix = new SquareMatrix<int>(new int[3, 3] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
-            CollectionAssert.AreEqual(new int[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }, matrix.GetElements());
+            testMatrix = new SquareMatrix<int>(new int[3, 3] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
+            CollectionAssert.AreEqual(new int[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }, testMatrix.GetElements());
 
-            matrix = new SquareMatrix<int>(9, 8, 7, 6, 5, 4, 3, 2, 1);
-            CollectionAssert.AreEqual(new int[9] { 9, 8, 7, 6, 5, 4, 3, 2, 1 }, matrix.GetElements());
+            testMatrix = new SquareMatrix<int>(9, 8, 7, 6, 5, 4, 3, 2, 1);
+            CollectionAssert.AreEqual(new int[9] { 9, 8, 7, 6, 5, 4, 3, 2, 1 }, testMatrix.GetElements());
+        }
 
-            matrix.ElementChanged += Matrix_ElementChanged;
-            matrix[1, 1] = 0;
+        [Test]
+        public void EventTest()
+        {
+            testMatrix = new SquareMatrix<int>(9, 8, 7, 6, 5, 4, 3, 2, 1);
+
+            testMatrix.ElementChanged += Matrix_ElementChanged;
+            testMatrix[1, 1] = 0;
+        }
+
+        [Test]
+        public void ExceptionsTest()
+        {
+            Assert.Throws<ArgumentException>(() => testMatrix = new SquareMatrix<int>(new int[2, 3] { { 1, 2, 3 }, { 1, 2, 3 } }));
+            Assert.Throws<ArgumentException>(() => testMatrix = new SquareMatrix<int>(1, 2, 3, 4, 5));
+        }
+
+        [Test]
+        public void AdditionTest()
+        {
+            testMatrix = new SquareMatrix<int>(9, 8, 7, 6, 0, 4, 3, 2, 1);
 
             var square = new SquareMatrix<int>(1, 2, 3, 4, 10, 6, 7, 8, 9);
-            var sum1 = matrix.Add(square);
-            var sum2 = square.Add(matrix);
+            var sum1 = testMatrix.Add(square);
+            var sum2 = square.Add(testMatrix);
             Assert.IsInstanceOf(typeof(SquareMatrix<int>), sum1);
             Assert.IsInstanceOf(typeof(SquareMatrix<int>), sum2);
             CollectionAssert.AreEqual(sum1.GetElements(), sum2.GetElements());
