@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Matrices
 {
-    public static class MatricesExtension
+    public static class MatrixExtension
     {
         public static AbstractMatrix<T> Add<T>(this AbstractMatrix<T> matrix1, AbstractMatrix<T> matrix2)
         {
@@ -38,7 +38,14 @@ namespace Matrices
                         continue;
                     }
 
-                    result[i, j] = matrix1[i, j] + (dynamic)matrix2[i, j];
+                    try
+                    {
+                        result[i, j] = matrix1[i, j] + (dynamic)matrix2[i, j];
+                    }
+                    catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException ex)
+                    {
+                        throw new NotSupportedException(ex.Message);
+                    }
                 }
             }
 
