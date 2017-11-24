@@ -70,6 +70,10 @@ namespace Homework.Tests.MatricesTests
             Assert.IsInstanceOf(typeof(SquareMatrix<int>), sum2);
             CollectionAssert.AreEqual(sum1.GetElements(), sum2.GetElements());
             CollectionAssert.AreEqual(new int[9] { 0, 13, 13, 13, 0, 12, 13, 12, 0 }, sum1.GetElements());
+
+            var matrix1 = new SquareMatrix<bool>(true);
+            var matrix2 = new SquareMatrix<bool>(false);
+            Assert.Throws<NotSupportedException>(() => matrix1.Add(matrix2));
         }
 
         private void Matrix_ElementChanged(object sender, SquareMatrix<int>.ElementChangedEventArgs e)
